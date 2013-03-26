@@ -1,0 +1,8 @@
+project ( csv++ )
+cmake_minimum_required (VERSION 2.6)
+set(CMAKE_BUILD_TYPE Release )
+add_definitions(-Wall)
+include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} include/)
+set (csv_SRCS src/parser.cpp src/writer.cpp)  
+add_library(csv++ SHARED ${csv_SRCS})
+target_link_libraries(csv++)
