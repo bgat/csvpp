@@ -1,0 +1,8 @@
+cmake_minimum_required (VERSION 2.6)
+project ( csvpp )
+set(CMAKE_BUILD_TYPE Release )
+add_definitions(-Wall)
+include_directories(${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${SOURCE_ROOT}/include/)
+set(csvpp_SRCS ${SOURCE_ROOT}/src/parser.cpp ${SOURCE_ROOT}/src/writer.cpp)  
+add_library(csvpp SHARED ${csvpp_SRCS})
+target_link_libraries(csvpp)

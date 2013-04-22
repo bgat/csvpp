@@ -231,7 +231,6 @@ namespace csv {
             static const bool valid = true;
         };
 
-
         struct invalid {
             static const bool valid = false;
             template<class T>

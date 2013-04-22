@@ -1,28 +1,59 @@
 QT       -= core gui
 
-TARGET = csv
-TEMPLATE = lib
+TARGET = csvpp
 
-DEFINES += CSV_LIBRARY
+csvpp_test {
+    TEMPLATE = app
+    CONFIG += console
+    CONFIG -= app_bundle
+    CONFIG -= qt
+    SOURCES += test/main.cpp \
+               test/simple.cpp \
+               test/vector.cpp \
+               test/array.cpp \
+               test/const_value.cpp \
+               test/const_vector.cpp \
+               test/iter.cpp \
+               test/const_iter.cpp \
+               test/iterate.cpp \
+               test/const_iterate.cpp
+    HEADERS += test/tests.h
+} else {
+    TEMPLATE = lib
+    DEFINES += CSVPP_LIBRARY
+}
 
 SOURCES += \
     src/writer.cpp \
     src/parser.cpp
 
 HEADERS += \
-    include/impl/sfinae.h \
-    include/impl/base.h \
-    include/impl/smanip.h \
-    include/impl/macros.h \
-    include/impl/operator.h \
-    include/csv.h \
-    include/parser.h \
-    include/writer.h \
-    include/writer_manipulators.h \
-    include/parser_manipulators.h \
-    include/quote.h \
-    include/iter.h \
-    include/stream.h \
-    include/headers.h
+    include/csvpp/impl/base.h \
+    include/csvpp/impl/smanip.h \
+    include/csvpp/impl/macros.h \
+    include/csvpp/sfinae/sfinae.h \
+    include/csvpp/csv.h \
+    include/csvpp/parser.h \
+    include/csvpp/writer.h \
+    include/csvpp/writer_manipulators.h \
+    include/csvpp/parser_manipulators.h \
+    include/csvpp/quote.h \
+    include/csvpp/iter.h \
+    include/csvpp/headers.h \
+    include/csvpp/exception.h \
+    include/csvpp/vector.h \
+    include/csvpp/list.h \
+    include/csvpp/impl/containers.h \
+    include/csvpp/array.h \
+    include/csvpp/set.h \
+    include/csvpp/pair.h \
+    include/csvpp/map.h \
+    include/csvpp/deque.h \
+    include/csvpp/sfinae/has_iterator.h \
+    include/csvpp/sfinae/has_const_iterator.h \
+    include/csvpp/sfinae/has_fcn_serialize.h \
+    include/csvpp/sfinae/has_value_type.h \
+    include/csvpp/push_line.h \
+    include/csvpp/string.h
 
 INCLUDEPATH += $$PWD/include
