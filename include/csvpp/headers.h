@@ -1,9 +1,9 @@
-#ifndef CSV_HEADERS_H
-#define CSV_HEADERS_H
+#ifndef CSVPP_HEADERS_H
+#define CSVPP_HEADERS_H
 
-#include "writer.h"
-#include "parser.h"
-#include "impl/smanip.h"
+#include <csvpp/writer.h>
+#include <csvpp/parser.h>
+#include <csvpp/impl/smanip.h>
 
 namespace csv {
 
@@ -59,4 +59,4 @@ const impl::csmanip< impl::headers_w<T> > headers(const T & wrapped)
 
 } // namespace csv
 
-#endif // CSV_HEADERS_H
+#endif // CSVPP_HEADERS_H

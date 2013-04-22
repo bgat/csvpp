@@ -1,5 +1,5 @@
-#ifndef CSV_BASE_H
-#define CSV_BASE_H
+#ifndef CSVPP_BASE_H
+#define CSVPP_BASE_H
 
 namespace csv {
 namespace impl {
@@ -31,4 +31,4 @@ public:
 } // namespace impl
 } // namespace csv
 
-#endif // CSV_BASE_H
+#endif // CSVPP_BASE_H

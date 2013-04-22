@@ -1,7 +1,7 @@
-#ifndef WRITER_MANIPULATORS_H
-#define WRITER_MANIPULATORS_H
+#ifndef CSVPP_WRITER_MANIPULATORS_H
+#define CSVPP_WRITER_MANIPULATORS_H
 
-#include "writer.h"
+#include <csvpp/writer.h>
 
 namespace csv {
 
@@ -14,4 +14,4 @@ inline writer & endl(writer & wr)
 
 }
 
-#endif // WRITER_MANIPULATORS_H
+#endif // CSVPP_WRITER_MANIPULATORS_H

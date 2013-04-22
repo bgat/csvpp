@@ -1,5 +1,5 @@
-#ifndef CSV_PARSER_H
-#define CSV_PARSER_H
+#ifndef CSVPP_PARSER_H
+#define CSVPP_PARSER_H
 
 // STL
 #include <istream>
@@ -8,22 +8,32 @@
 #include <sstream>
 
 // csv
-#include "impl/sfinae.h"
-#include "impl/base.h"
-#include "impl/smanip.h"
-#include "impl/macros.h"
+#include <csvpp/impl/base.h>
+#include <csvpp/impl/smanip.h>
+#include <csvpp/impl/macros.h>
+#include <csvpp/exception.h>
 
-// boost
-#include <boost/mpl/if.hpp>
+// boost mpl
+#include <boost/mpl/eval_if.hpp>
+#include <boost/mpl/equal_to.hpp>
+#include <boost/mpl/identity.hpp>
+#include <boost/mpl/bool.hpp>
+
+// boost utility
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
-CSV_MANIPULATORS_FWD()
+// boost serialization
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/level.hpp>
+#include <boost/serialization/level_enum.hpp>
+
+CSVPP_MANIPULATORS_FWD()
 
 namespace csv {
 
     class parser : public impl::base {
-        CSV_MANIPULATORS_FRIENDS()
+        CSVPP_MANIPULATORS_FRIENDS();
     public:
         typedef boost::mpl::bool_<true> is_loading;
         typedef boost::mpl::bool_<false> is_saving;
@@ -34,42 +44,72 @@ namespace csv {
                char escape='\\');
 
         template<class T>
+        typename T::parser_ret_type operator&(const impl::smanip<T>& manip) {
+            return const_cast<impl::smanip<T>&>(manip)(*this);
+        }
+
+        template<class T>
+        typename T::parser_ret_type operator>>(const impl::smanip<T>& manip) {
+            return const_cast<impl::smanip<T>&>(manip)(*this);
+        }
+
+        template<class T>
+        typename T::parser_ret_type operator&(const impl::csmanip<T>& manip) {
+            BOOST_STATIC_ASSERT(sizeof(T)<0);
+            //////////////////////////////////////////////////////////////////////////////
+            //                                                                          //
+            //   HEY PROGRAMMER, READ THIS !!                                           //
+            //                                                                          //
+            //   If you see a compilation error here, it means, that you tried to       //
+            //   load a csv into const object, which is of course not possible.         //
+            //                                                                          //
+            //   Check your compiler info to find where this error took place.          //
+            //                                                                          //
+            //////////////////////////////////////////////////////////////////////////////
+            return const_cast<impl::csmanip<T>&>(manip)(*this);
+        }
+
+        template<class T>
+        typename T::parser_ret_type operator>>(const impl::csmanip<T>& manip) {
+            return *this & manip;
+        }
+
+        template<class T>
         parser &operator>>(T& val) {
             return *this & val;
         }
 
         template<class T>
+        parser &operator>>(const T& val) {
+            return *this & val;
+        }
+
+        template<class T>
         parser &operator&(T& val) {
-            typedef typename boost::mpl::if_<
-                    impl::has_csv_serialize<T, parser>,
-                    parser::csv_serializer,
-                    typename boost::mpl::if_<
-                    impl::has_serialize<T, parser>,
-                    parser::serializer,
-                    typename boost::mpl::if_<
-                    impl::has_insertion_operator<T, parser>,
-                    parser::streamer,
-                    typename boost::mpl::if_<
-                    impl::has_iterator<T, parser>,
-                    parser::iter_serializer,
-                    parser::invalid
-                    >::type
-                    >::type
-                    >::type
+            typedef
+            BOOST_DEDUCED_TYPENAME boost::mpl::eval_if<
+                    // if its primitive
+                    boost::mpl::equal_to<
+                    boost::serialization::implementation_level< T >,
+                    boost::mpl::int_<boost::serialization::primitive_type>
+                    >,
+                    boost::mpl::identity<load_primitive>,
+                    // else
+                    boost::mpl::identity<load_class>
                     >::type typex;
 
-            BOOST_STATIC_ASSERT(typex::valid); // check if T is possible to read into
             //////////////////////////////////////////////////////////////////////////////
             //                                                                          //
             //   HEY PROGRAMMER, READ THIS !!                                           //
             //                                                                          //
-            //   If you see a compilation error here, it means, that you used a type,   //
-            //   that is not suitable for loading from csv                              //
+            BOOST_STATIC_ASSERT(typex::valid);                                          //
             //                                                                          //
-            //   Provide a proper serialize() or load() method for this to be working.  //
+            //   If you see a compilation error here, it means, that you used a type,   //
+            //   that is not suitable for writing into csv                              //
+            //                                                                          //
+            //   Provide a proper serialize() or save() method for this to be working.  //
             //                                                                          //
             //////////////////////////////////////////////////////////////////////////////
-
             typex::invoke(*this, val);
             return *this;
         }
@@ -90,27 +130,6 @@ namespace csv {
             return *this;
         }
 
-        template<class T>
-        typename T::parser_ret_type operator&(const impl::smanip<T>& manip) {
-            return const_cast<impl::smanip<T>&>(manip)(*this);
-        }
-
-        template<class T>
-        typename T::parser_ret_type operator&(const impl::csmanip<T>& manip) {
-            BOOST_STATIC_ASSERT(sizeof(T)<0);
-            //////////////////////////////////////////////////////////////////////////////
-            //                                                                          //
-            //   HEY PROGRAMMER, READ THIS !!                                           //
-            //                                                                          //
-            //   If you see a compilation error here, it means, that you tried to       //
-            //   load a csv into const object, which is of course not possible.         //
-            //                                                                          //
-            //   Check your compiler info to find where this error took place.          //
-            //                                                                          //
-            //////////////////////////////////////////////////////////////////////////////
-            return const_cast<impl::csmanip<T>&>(manip)(*this);
-        }
-
         // operatory do manipulatorów
         parser& operator>>(parser& (*pf) (parser&))
         {
@@ -123,15 +142,20 @@ namespace csv {
 
         unsigned line() { return _linenumber; }
         unsigned column() { return _colnumber; }
-        bool has_more() {
+        bool more_in_line() {
             if(_iterator != _tokenizer->end())
                 return true;
+            return false;
+        }
+        bool more_except_line() {
             if(!_empty_istream())
                 return true;
             return false;
         }
-        bool line_has_more() {
-            if(_iterator != _tokenizer->end())
+        bool more() {
+            if(_iterator == _tokenizer->end())
+                return true;
+            if(!_empty_istream())
                 return true;
             return false;
         }
@@ -160,24 +184,37 @@ namespace csv {
 
         void _getline();
 
-        struct streamer {
+        struct load_primitive {
             template<class T>
             static void invoke(parser& par, T& val) {
+
+                static const bool primitive =
+                        boost::mpl::equal_to<
+                        boost::serialization::implementation_level< T >,
+                        boost::mpl::int_<boost::serialization::primitive_type>
+                        >::value;
+
+                //////////////////////////////////////////////////////////////////////////////
+                //                                                                          //
+                //   HEY PROGRAMMER, READ THIS !!                                           //
+                //                                                                          //
+                BOOST_STATIC_ASSERT(primitive);                                             //
+                //                                                                          //
+                //   If you see a compilation error here, it means, that you tried to       //
+                //   load csv into object, which is not a primitive type.                   //
+                //   i.e. int or string                                                     //
+                //                                                                          //
+                //   Check your compiler info to find where this error took place.          //
+                //                                                                          //
+                //////////////////////////////////////////////////////////////////////////////
+
                 if(par._iterator == par._tokenizer->end()) {
-                    throw std::runtime_error(
-                                "No data available in line " +
-                                boost::lexical_cast<std::string>(par._linenumber) +
-                                ", column " +
-                                boost::lexical_cast<std::string>(par._colnumber)
-                                );
+                    throw no_data_available(par._linenumber, par._colnumber);
                 }
                 try {
                     val = boost::lexical_cast<T>(*par._iterator);
                 } catch (const boost::bad_lexical_cast&) {
-                    throw std::runtime_error("Could not interpret data in line " +
-                                             boost::lexical_cast<std::string>(par._linenumber) +
-                                             ", column " +
-                                             boost::lexical_cast<std::string>(par._colnumber));
+                    throw bad_cast(par._linenumber, par._colnumber);
                 }
 
                 ++par._iterator;
@@ -186,42 +223,14 @@ namespace csv {
             static const bool valid = true;
         };
 
-        struct iter_serializer {
+        struct load_class {
             template<class T>
             static void invoke(parser& par, T& val) {
-                for(typename T::iterator it = val.begin();
-                    it != val.end();
-                    ++it)
-                {
-                    par >> *it;
-                }
+                boost::serialization::serialize_adl(par, val, 0);
             }
             static const bool valid = true;
         };
 
-        struct serializer {
-            template<class T>
-            static void invoke(parser& par, T& val) {
-                val.serialize(par, 0);
-            }
-            static const bool valid = true;
-        };
-
-        struct csv_serializer {
-            template<class T>
-            static void invoke(parser& par, T& val) {
-                val.csv_serialize(par);
-            }
-            static const bool valid = true;
-        };
-
-        struct loader {
-            template<class T>
-            static void invoke(parser& par, T& val) {
-                val.load(par, 0);
-            }
-            static const bool valid = true;
-        };
 
         struct invalid {
             static const bool valid = false;
@@ -229,12 +238,11 @@ namespace csv {
             static void invoke(parser& par, const T& val);
         };
 
-        friend struct serializer;
+        friend struct member_serializer;
         friend struct streamer;
-        friend struct loader;
 
     };
 
 }
 
-#endif // CSV_PARSER_H
+#endif // CSVPP_PARSER_H
