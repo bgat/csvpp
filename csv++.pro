@@ -16,7 +16,10 @@ csvpp_test {
                test/iter.cpp \
                test/const_iter.cpp \
                test/iterate.cpp \
-               test/const_iterate.cpp
+               test/const_iterate.cpp \
+               test/push_line.cpp \
+               test/derived_class.cpp \
+               test/split_member.cpp
     HEADERS += test/tests.h
 } else {
     TEMPLATE = lib
@@ -54,6 +57,13 @@ HEADERS += \
     include/csvpp/sfinae/has_fcn_serialize.h \
     include/csvpp/sfinae/has_value_type.h \
     include/csvpp/push_line.h \
-    include/csvpp/string.h
+    include/csvpp/string.h \
+    include/csvpp/base_object.h \
+    include/csvpp/split_member.h
 
 INCLUDEPATH += $$PWD/include
+
+OTHER_FILES += \
+    CMakeLists.txt \
+    test/CMakeLists.txt \
+    src/CMakeLists.txt
