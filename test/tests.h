@@ -24,6 +24,9 @@ void iter();
 void const_iter();
 void iterate();
 void const_iterate();
+void push_line();
+void derived_class();
+void split_member();
 
 }
 }

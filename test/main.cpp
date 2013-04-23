@@ -24,6 +24,9 @@ int main(int /* argc */, char** /* argv */) {
         CSVPP_TEST(const_iter);
         CSVPP_TEST(iterate);
         CSVPP_TEST(const_iterate);
+        CSVPP_TEST(push_line);
+        CSVPP_TEST(derived_class);
+        CSVPP_TEST(split_member)
 
 
 #ifdef NDEBUG
