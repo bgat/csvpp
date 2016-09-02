@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 set(SOURCE_ROOT ..)
 cmake_policy(SET CMP0011 NEW)
-include(../src/CmakeLists.txt)
+include(../src/CMakeLists.txt)
 project ( csvpp_test )
 set(csvpp_test_src main.cpp array.cpp const_iter.cpp const_iterate.cpp const_value.cpp const_vector.cpp)
 set(csvpp_test_src ${csvpp_test_src} iter.cpp iterate.cpp simple.cpp vector.cpp derived_class.cpp )
